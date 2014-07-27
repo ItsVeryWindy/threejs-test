@@ -6,9 +6,22 @@ define(['three', 'pubsub'], function (THREE, PubSub) {
   PubSub.subscribe('init-scene', function(msg, data) {
 	var geometry = new THREE.CubeGeometry(200, 200, 200);
     var material = new THREE.MeshLambertMaterial({
-        color: 0xff0000
+        color: 0xffffff,
+		vertexColors: THREE.FaceColors
     });
 
+	var face, color;
+	
+	for ( var i = 0; i < geometry.faces.length; i++ ) 
+	{
+		if(i % 2 === 0) {
+			color = 0.8 * Math.random() + 0.2;
+		}
+	
+		face = geometry.faces[i];
+		face.color.setRGB(color, 0, 0);		
+	}
+	
     mesh = new THREE.Mesh(geometry, material);
 	
 	mesh.position.y = 100;
@@ -34,7 +47,7 @@ define(['three', 'pubsub'], function (THREE, PubSub) {
 	data.scene.add(mesh);
   });
   
-  PubSub.subscribe('scene-frame', function(msg, evt) {
+  PubSub.subscribe('scene-frame', function() {
 	//mesh.rotation.x += 0.01;
 	//mesh.rotation.y += 0.02;
   });
