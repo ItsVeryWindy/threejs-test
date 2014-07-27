@@ -4,7 +4,9 @@ requirejs.config({
     baseUrl: 'js/vendor',
 	paths: {
 		floor: '../floor',
-		basecube: '../basecube'
+		basecube: '../basecube',
+		dof: '../dof',
+		orbit: '../orbit'
 	},
 	shim: {
 		three: {
@@ -16,7 +18,7 @@ requirejs.config({
 	}
 });
 
-require(['three', 'pubsub', 'floor', 'basecube'], function(THREE, PubSub) {
+require(['three', 'pubsub', 'floor', 'basecube', /*'dof',*/ 'orbit'], function(THREE, PubSub) {
 
 var camera, scene, renderer;
 
@@ -31,13 +33,13 @@ function init() {
 
     scene = new THREE.Scene();
 
-	PubSub.publish('init-scene', scene);
+	PubSub.publishSync('init-scene', { scene: scene, camera: camera });
 	
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({antialias:true});
     renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.shadowMapEnabled = true;
 	renderer.shadowMapSoft = true;
-	renderer.shadowMapType = THREE.PCFShadowMap;
+	renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
     document.body.appendChild(renderer.domElement);
 }
@@ -47,10 +49,26 @@ function animate() {
     // note: three.js includes requestAnimationFrame shim
     requestAnimationFrame(animate);
 
-	PubSub.publish('scene-frame');
+	var evt = {
+		scene: scene,
+		camera: camera,
+	};
+	
+	PubSub.publishSync('scene-frame', evt);
+	
+	scene.overrideMaterial = null;
 	
 	renderer.clear();
-    renderer.render(scene, camera);
+    
+	evt = {
+		scene: scene,
+		camera: camera,
+		renderer: renderer
+	};
+	
+	PubSub.publishSync('render-scene', evt);
+	
+	renderer.render(evt.scene, evt.camera);
 }
 
 });

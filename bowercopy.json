@@ -7,7 +7,8 @@
         "files": {
             "three.js": "threejs/build/three.js",
             "require.js": "requirejs/require.js",
-			"pubsub.js": "pubsub-js/src/pubsub.js"
+			"pubsub.js": "pubsub-js/src/pubsub.js",
+			"Tween.js": "tweenjs/src/Tween.js"
         }
     }
 }
