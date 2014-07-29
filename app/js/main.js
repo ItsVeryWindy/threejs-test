@@ -6,7 +6,9 @@ requirejs.config({
 		floor: '../floor',
 		basecube: '../basecube',
 		dof: '../dof',
-		orbit: '../orbit'
+		orbit: '../orbit',
+		cameraRotator: '../camera-rotator',
+		postRenderer: '../post-renderer'
 	},
 	shim: {
 		three: {
@@ -14,11 +16,14 @@ requirejs.config({
 		},
 		pubsub: {
 			exports: 'PubSub'
+		},
+		tween: {
+			exports: 'TWEEN'
 		}
 	}
 });
 
-require(['three', 'pubsub', 'floor', 'basecube', /*'dof',*/ 'orbit'], function(THREE, PubSub) {
+require(['three', 'pubsub', 'tween', 'floor', 'basecube', /*'dof', 'orbit',*/ 'cameraRotator'], function(THREE, PubSub, TWEEN) {
 
 var camera, scene, renderer;
 
@@ -44,11 +49,12 @@ function init() {
     document.body.appendChild(renderer.domElement);
 }
 
-function animate() {
+function animate(time) {
 
     // note: three.js includes requestAnimationFrame shim
     requestAnimationFrame(animate);
-
+	TWEEN.update(time);
+	
 	var evt = {
 		scene: scene,
 		camera: camera,
