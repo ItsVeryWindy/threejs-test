@@ -3,6 +3,8 @@
 define(['three'], function (THREE) {
 	function PostRenderer(shader, setup, render, defines)
 	{
+		defines = defines || {};
+	
 		this.scene = new THREE.Scene();
 		
 		this.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2,  window.innerHeight / 2, window.innerHeight / - 2, -10000, 10000 );

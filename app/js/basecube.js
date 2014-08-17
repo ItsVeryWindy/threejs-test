@@ -48,7 +48,7 @@ define(['three', 'pubsub'], function (THREE, PubSub) {
   });
   
   PubSub.subscribe('scene-frame', function() {
-	//mesh.rotation.x += 0.01;
-	//mesh.rotation.y += 0.02;
+	mesh.rotation.x += 0.01;
+	mesh.rotation.y += 0.02;
   });
 });

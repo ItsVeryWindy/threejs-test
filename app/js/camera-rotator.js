@@ -1,7 +1,7 @@
 /*global define:false */
 
-define(['three', 'pubsub', 'tween', 'postRenderer'], function (THREE, PubSub, TWEEN, PostRenderer) {
-	var yaw = 0, pitch = 0, currentTween = null, postRendererH, postRendererV,
+define(['three', 'pubsub', 'tween', 'post-renderer'], function (THREE, PubSub, TWEEN, PostRenderer) {
+	var yaw = 0, pitch = 0, postRendererH, postRendererV,
 		keyPressed = {}, hBlur = 0, vBlur = 0, spotLight;
 	
 	/**
@@ -120,35 +120,31 @@ define(['three', 'pubsub', 'tween', 'postRenderer'], function (THREE, PubSub, TW
 			yaw = Math.round(yaw / 90) * 90;
 		}
 		
-		function tween(valueDir, getValue, setValue, setBlur) {
+		function tween(valueDir, getValue, setValue, setBlur, speed) {
 			var newValue = getValue() + valueDir;
 			var pValue = 0;
 			var oldValue = getValue();
 			
-			currentTween = new TWEEN.Tween( { x: 0 } )
-				.to( { x: valueDir }, 1000 )
+			var t = new TWEEN.Tween( { x: 0 } )
+				.to( { x: valueDir }, speed )
 				.easing(TWEEN.Easing.Exponential.Out)
 				.onUpdate(function () {
-					setValue(getValue() + this.x - pValue);
-					pValue = this.x;
-					setBlur(Math.abs(newValue - oldValue - this.x) / 90 * 16);
-				})
-				.onComplete(function () {
-					currentTween = null;
+					if(setValue(getValue() + this.x - pValue) !== false) {
+						pValue = this.x;
+						setBlur(Math.abs(newValue - oldValue - this.x) / 90 * 16);
+					} else {
+						t.stop();
+					}
 				})
 				.start();
 		}
 		
 		switch (event.keyCode) {
 			case UP:
-				//if(pitch >= 0) {
-					pitchDir = -90;
-				//}
+				pitchDir = -90;
 			break;
 			case BOTTOM:
-				//if(pitch <= 0) {
-					pitchDir = 90;
-				//}
+				pitchDir = 90;
 			break;
 			case LEFT:
 				yawDir = 90;
@@ -159,15 +155,21 @@ define(['three', 'pubsub', 'tween', 'postRenderer'], function (THREE, PubSub, TW
 		}
 		
 		if(yawDir !== 0) {
-			tween(yawDir, function() { return yaw; }, function(value) { yaw = value; }, function(value) { hBlur = value; });
+			tween(yawDir, function() { return yaw; }, function(value) { yaw = value; }, function(value) { hBlur = value; }, 500);
 		}
 		
 		if(pitchDir !== 0) {
 			tween(pitchDir, function() { return pitch; }, function(value) {
 				pitch = value;
+				
 				pitch = Math.min(pitch, 90);
 				pitch = Math.max(pitch, -90);
-			}, function(value) { vBlur = value; });
+				
+				if(pitch === 90 || pitch === -90) {
+					return false;
+				}
+				
+			}, function(value) { vBlur = value; }, 1000);
 		}
 		
 		keyPressed[event.keyCode.toString()] = true;
@@ -215,8 +217,11 @@ define(['three', 'pubsub', 'tween', 'postRenderer'], function (THREE, PubSub, TW
 	window.addEventListener('keyup', onKeyUp, false);
   });
   
-  PubSub.subscribe('render-scene', function(msg, data) {
-	var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+  PubSub.subscribe('scene-frame', function(msg, data) {
+	var width = window.innerWidth * 2;
+	var height = window.innerHeight * 2;
+	//var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+	var camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 10000 );
 
 	camera.translateX(0);
 	camera.translateY(0);
@@ -232,8 +237,12 @@ define(['three', 'pubsub', 'tween', 'postRenderer'], function (THREE, PubSub, TW
 	spotLight.position.y = camera.position.y;
 	spotLight.position.z = camera.position.z;
 	
-	data.camera = camera;
+	camera.updateMatrixWorld();
 	
+	data.camera = camera;
+  });
+  
+  PubSub.subscribe('render-scene', function(msg, data) {
 	if(vBlur === 0) {
 		pitch = Math.round(pitch / 90) * 90;
 	}
